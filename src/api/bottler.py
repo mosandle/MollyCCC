@@ -47,11 +47,11 @@ def get_bottle_plan():
     # Initial logic: bottle all barrels into red potions.
 
     with db.engine.begin() as connection:
-        sql_statement = text("SELECT num_red_potions, num_red_ml FROM global_inventory")
+        #only bottles if there is an amount of mL divisible by 100 available, otherwise waits
+        sql_statement = text("SELECT num_red_ml FROM global_inventory")
         result = connection.execute(sql_statement)
         row = result.first()   
-        num_red_potions = row[0]
-        num_red_ml = row[1]
+        num_red_ml = row[0]
         if num_red_ml != 0:
             if num_red_ml % 100 == 0:
                     return [
