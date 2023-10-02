@@ -48,10 +48,6 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     #if cart is not empty, return 1 bought and 50 paid
     #if empty, return nothing
 
-    cart = Cart.retrieve(cart_id)
-
-    if cart.item_quantity == 1: #this is not correct, must be fixed
-        return { "total_potions_bought": 1, "total_gold_paid": 50 }
-    
-    return { "total_potions_bought": 0, "total_gold_paid": 0 }
+    cart = Cart()
+    return cart.get_cart_items()
 

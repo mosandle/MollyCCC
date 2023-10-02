@@ -17,3 +17,12 @@ class Cart():
 
     def retrieve(cart_id: int):
         return Cart.carts_storage.get(cart_id)
+
+    def get_cart_items(self):
+        if self.items.items() == 1:
+            return { "total_potions_bought": 1, "total_gold_paid": 50 }
+        else:
+            return { "total_potions_bought": 0, "total_gold_paid": 0 }
+
+
+    

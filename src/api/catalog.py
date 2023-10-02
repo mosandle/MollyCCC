@@ -29,15 +29,7 @@ def get_catalog():
                 }
             ]
         else:
-            return [
-                {
-                    "sku": "RED_POTION_0",  # Basic sku
-                    "name": "red potion",  # Basic name
-                    "quantity": 0,  # 0 potions if we have 0 available
-                    "price": 50,  # Price hardcoded at 50.
-                    "potion_type": [100, 0, 0, 0],  # Red potion rgb value
-                }
-            ]
+            return []
 
 
 
