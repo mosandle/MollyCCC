@@ -52,12 +52,12 @@ def get_bottle_plan():
         row = result.first()   
         num_red_potions = row[0]
         num_red_ml = row[1]
-
-        if num_red_ml % 100 == 0:
-                return [
-                    {
-                        "potion_type": [100, 0, 0, 0],
-                        "quantity": (num_red_ml / 100),
-                    }
-            ]
+        if num_red_ml != 0:
+            if num_red_ml % 100 == 0:
+                    return [
+                        {
+                            "potion_type": [100, 0, 0, 0],
+                            "quantity": (num_red_ml / 100),
+                        }
+                ]
         return []

@@ -20,9 +20,9 @@ class Cart():
 
     def get_cart_items(self):
         if self.items.items() == 1:
-            return { "total_potions_bought": 1, "total_gold_paid": 50 }
+            return True
         else:
-            return { "total_potions_bought": 0, "total_gold_paid": 0 }
+            False
 
 
     

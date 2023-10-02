@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from src.api import auth
 import sqlalchemy
+from sqlalchemy import *
 from ..models.Cart import Cart
 from ..models.Cart import NewCart
 from src import database as db
@@ -49,5 +50,13 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     #if empty, return nothing
 
     cart = Cart()
-    return cart.get_cart_items()
+    if cart.get_cart_items():
+        with db.engine.begin() as connection:
+            sql_statement = text("UPDATE global_inventory SET num_red_potions = num_red_potions - 1")
+            sql_statement2 = text("UPDATE global_inventory SET gold = gold + 50")
+            result = connection.execute(sql_statement)
+            result2 = connection.execute(sql_statement2)
+            return { "total_potions_bought": 1, "total_gold_paid": 50 }
+    return { "total_potions_bought": 0, "total_gold_paid": 0 }
+ 
 
