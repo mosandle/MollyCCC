@@ -60,4 +60,4 @@ def get_bottle_plan():
                         "quantity": (num_red_ml / 100),
                     }
             ]
-        return "OK"
+        return []
