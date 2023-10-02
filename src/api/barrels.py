@@ -27,11 +27,11 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     with db.engine.begin() as connection:
         for barrel in barrels_delivered:
             sql_statement = text("UPDATE global_inventory SET gold = gold - :price")
-            sql_statement2 = text("UPDATE global_inventory SET num_red_ml = num_red_ml + :ml_per_barrel")
+            sql_statement2 = text("UPDATE global_inventory SET num_red_ml = num_red_ml + (:ml_per_barrel * :quantity)")
             #sql_statement3 = text("UPDATE global_inventory SET num_red_potions = num_red_potions + (:ml_per_barrel / 100)")
 
             result = connection.execute(sql_statement, {"price": barrel.price})
-            result2 = connection.execute(sql_statement2, {"ml_per_barrel": barrel.ml_per_barrel})
+            result2 = connection.execute(sql_statement2, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
             #result3 = connection.execute(sql_statement3, {"ml_per_barrel": barrel.ml_per_barrel})
 
         return "OK"
@@ -60,7 +60,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     return [
                                 {
                                     "sku": "SMALL_RED_BARREL",
-                                    "quantity": 1,
+                                    "quantity": barrel.quantity,
                                 }            
                             ]
         return "OK"

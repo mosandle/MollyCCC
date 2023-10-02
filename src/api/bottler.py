@@ -27,7 +27,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     with db.engine.begin() as connection:
         for potion in potions_delivered:
             sql_statement = text("UPDATE global_inventory SET num_red_potions = num_red_potions + :quantity")
-            sql_statement2 = text("UPDATE global_inventory SET num_red_ml = num_red_ml - :quantity * 100")
+            sql_statement2 = text("UPDATE global_inventory SET num_red_ml = num_red_ml - (:quantity * 100)")
             result = connection.execute(sql_statement, {"quantity": potion.quantity})
             result2 = connection.execute(sql_statement2, {"quantity": potion.quantity})
 
@@ -53,7 +53,7 @@ def get_bottle_plan():
         num_red_potions = row[0]
         num_red_ml = row[1]
 
-        if num_red_ml % 100 == 0:     
+        if num_red_ml % 100 == 0:
                 return [
                     {
                         "potion_type": [100, 0, 0, 0],
