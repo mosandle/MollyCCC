@@ -16,7 +16,6 @@ router = APIRouter(
 @router.post("/")
 def create_cart(new_cart: NewCart):
     newCart = Cart(new_cart)
-
     return {"cart_id": newCart.id} 
 
 
@@ -33,12 +32,17 @@ class CartItem(BaseModel):
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
     cart = Cart.retrieve(cart_id)
-    if item_sku == "RED_POTION_0":
-        cart_item.quantity = 1 #hard coding in one. will only ever buy one red potion for $50 
-    else:
-        cart_item.quantity = 0 #hard coding in 0. will be 0 if not one red potion
-    
-    return "OK"
+    with db.engine.begin() as connection:
+        sql_statement = text("SELECT num_red_potions FROM global_inventory")
+        result = connection.execute(sql_statement)
+        row = result.first()   
+        num_red_potions = row[0]
+        if num_red_potions != 0:
+            if item_sku == "RED_POTION_0":
+                cart.set_items(item_sku, 1)
+                return "OK"
+        else:
+            return {"error. please try again later"}
 
 class CartCheckout(BaseModel):
     payment: str
@@ -49,14 +53,17 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     #if cart is not empty, return 1 bought and 50 paid
     #if empty, return nothing
 
-    cart = Cart()
-    if cart.get_cart_items():
-        with db.engine.begin() as connection:
-            sql_statement = text("UPDATE global_inventory SET num_red_potions = num_red_potions - 1")
-            sql_statement2 = text("UPDATE global_inventory SET gold = gold + 50")
-            result = connection.execute(sql_statement)
-            result2 = connection.execute(sql_statement2)
-            return { "total_potions_bought": 1, "total_gold_paid": 50 }
-    return { "total_potions_bought": 0, "total_gold_paid": 0 }
- 
+    cart = Cart.retrieve(cart_id)
+    if cart:
+        if cart.get_cart_items():
+            with db.engine.begin() as connection:
+                sql_statement = text("UPDATE global_inventory SET num_red_potions = num_red_potions - 1")
+                sql_statement2 = text("UPDATE global_inventory SET gold = gold + 50")
+                result = connection.execute(sql_statement)
+                result2 = connection.execute(sql_statement2)
+                return { "total_potions_bought": 1, "total_gold_paid": 50 }
+        else:
+            return { "total_potions_bought": 0, "total_gold_paid": 0 }
+    return {"Error. Cart not found"}
+    
 

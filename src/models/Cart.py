@@ -15,14 +15,15 @@ class Cart():
         self.customer = new_cart.customer
         Cart.carts_storage[self.id] = self
 
-    def retrieve(cart_id: int):
-        return Cart.carts_storage.get(cart_id)
+    @classmethod
+    def retrieve(cls, cart_id: int):
+        return cls.carts_storage.get(cart_id)
 
     def get_cart_items(self):
-        if self.items.items() == 1:
-            return True
-        else:
-            False
+        return bool(self.items)
 
+    def set_items(self, sku: str, quantity: int):
+        #quantity should always be 1
+        if not sku in self.items:
+            self.items[sku] = quantity
 
-    
