@@ -47,18 +47,15 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     #then i will buy one barrel
     #otherwise, i will buy 0
 
-    amount_bought = len(wholesale_catalog) #length of list aka how many barrels are available to buy
     with db.engine.begin() as connection:
-        sql_statement = text("SELECT num_red_potions FROM global_inventory")
-        sql_statement2 = text("SELECT gold FROM global_inventory")
-        
+        sql_statement = text("SELECT num_red_potions, gold FROM global_inventory")
         result = connection.execute(sql_statement)
-        row = result.first()      
-        if row[0] < 10:
-            result2 = connection.execute(sql_statement2)
+        row = result.first()   
+        num_red_potions = row[0]
+        gold_count = row[1]
+        if num_red_potions < 10:
             for barrel in wholesale_catalog:
-                row2 = result2.first()
-                if row2[0] >= barrel.price:
+                if gold_count >= barrel.price:
                     return [
                                 {
                                     "sku": "SMALL_RED_BARREL",
