@@ -56,7 +56,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
         if num_red_potions < 10:
             for barrel in wholesale_catalog:
-                if gold_count >= barrel.price:
+                if gold_count >= (barrel.price * barrel.quantity):
                     return [
                                 {
                                     "sku": barrel.sku,
