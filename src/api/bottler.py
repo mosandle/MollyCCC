@@ -26,11 +26,25 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
 
     with db.engine.begin() as connection:
         for potion in potions_delivered:
-            sql_statement = text("UPDATE global_inventory SET num_red_potions = num_red_potions + :quantity")
-            sql_statement2 = text("UPDATE global_inventory SET num_red_ml = num_red_ml - (:quantity * 100)")
-            result = connection.execute(sql_statement, {"quantity": potion.quantity})
-            result2 = connection.execute(sql_statement2, {"quantity": potion.quantity})
+            if potion.potion_type == [100, 0, 0, 0]: #red potions
+                sql_statement = text("UPDATE global_inventory SET num_red_potions = num_red_potions + :quantity")
+                sql_statement2 = text("UPDATE global_inventory SET num_red_ml = num_red_ml - (:quantity * 100)")
+                result = connection.execute(sql_statement, {"quantity": potion.quantity})
+                result2 = connection.execute(sql_statement2, {"quantity": potion.quantity})
+            
+            elif potion.potion_type == [0, 100, 0, 0]: #green potions
+                sql_statement = text("UPDATE global_inventory SET num_green_potions = num_green_potions + :quantity")
+                sql_statement2 = text("UPDATE global_inventory SET num_green_ml = num_green_ml - (:quantity * 100)")
+                result = connection.execute(sql_statement, {"quantity": potion.quantity})
+                result2 = connection.execute(sql_statement2, {"quantity": potion.quantity})
 
+            elif potion.potion_type == [0, 0, 100, 0]: #blue potions
+                sql_statement = text("UPDATE global_inventory SET num_blue_potions = num_blue_potions + :quantity")
+                sql_statement2 = text("UPDATE global_inventory SET num_blue_ml = num_blue_ml - (:quantity * 100)")
+                result = connection.execute(sql_statement, {"quantity": potion.quantity})
+                result2 = connection.execute(sql_statement2, {"quantity": potion.quantity})
+            else:
+                 return "not okay serious problem occurring"
 
     return "OK"
 
@@ -48,16 +62,36 @@ def get_bottle_plan():
 
     with db.engine.begin() as connection:
         #only bottles if there is an amount of mL divisible by 100 available, otherwise waits
-        sql_statement = text("SELECT num_red_ml FROM global_inventory")
+        sql_statement = text("SELECT num_red_ml, num_green_ml, num_blue_ml FROM global_inventory")
         result = connection.execute(sql_statement)
         row = result.first()   
         num_red_ml = row[0]
+        num_green_ml = row[1]
+        num_blue_ml = row[2]
+
+        final_bottler_plan = []
+        
         if num_red_ml != 0:
             if num_red_ml % 100 == 0:
-                    return [
+                    final_bottler_plan.append(
                         {
                             "potion_type": [100, 0, 0, 0],
                             "quantity": int(num_red_ml / 100),
-                        }
-                ]
-        return []
+                        })
+                    
+        if num_green_ml != 0:
+            if num_green_ml % 100 == 0:
+                    final_bottler_plan.append(
+                        {
+                            "potion_type": [0, 100, 0, 0],
+                            "quantity": int(num_green_ml / 100),
+                        })
+                    
+        if num_blue_ml != 0:
+            if num_blue_ml % 100 == 0:
+                    final_bottler_plan.append(
+                        {
+                            "potion_type": [0, 0, 100, 0],
+                            "quantity": int(num_blue_ml / 100),
+                        })
+        return final_bottler_plan
