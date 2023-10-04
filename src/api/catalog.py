@@ -31,7 +31,7 @@ def get_catalog():
                     "potion_type": [100, 0, 0, 0],  # Red potion rgb value
                 }
             ]
-        elif num_green > 0:
+        if num_green > 0:
             return [
                 {
                     "sku": "GREEN_POTION_0",  # Basic sku
@@ -41,7 +41,7 @@ def get_catalog():
                     "potion_type": [0, 100, 0, 0],  # green potion rgb value
                 }
             ]
-        elif num_blue > 0:
+        if num_blue > 0:
             return [
                 {
                     "sku": "BLUE_POTION_0",  # Basic sku
