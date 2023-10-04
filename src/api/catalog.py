@@ -15,7 +15,7 @@ def get_catalog():
     #currently lists one single red potion no matter the quantity, if 0 in possession lists 0
     
     with db.engine.begin() as connection:
-        sql_statement = text("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory LIMIT 20")
+        sql_statement = text("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory")
         result = connection.execute(sql_statement)
         row = result.first()
         num_red = row[0]
