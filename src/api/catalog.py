@@ -11,7 +11,7 @@ def get_catalog():
     """
     Each unique item combination must have only a single price.
     """
-    # Can return a max of 20 items.
+    # Can return a max of 6 items.
     #currently lists one single red potion no matter the quantity, if 0 in possession lists 0
     
     with db.engine.begin() as connection:
@@ -21,18 +21,18 @@ def get_catalog():
         num_red = row[0]
         num_green = row[1]
         num_blue = row[2]
+        final_catalog = []
         if num_red > 0:
-            return [
-                {
+                final_catalog.append ({
                     "sku": "RED_POTION_0",  # Basic sku
                     "name": "red potion",  # Basic name
                     "quantity": num_red,  #listing the actual amount of red potions I have
                     "price": 55,  # Price hardcoded at $55.
                     "potion_type": [100, 0, 0, 0],  # Red potion rgb value
                 }
-            ]
+                )
         if num_green > 0:
-            return [
+            final_catalog.append (
                 {
                     "sku": "GREEN_POTION_0",  # Basic sku
                     "name": "green potion",  # Basic name
@@ -40,9 +40,9 @@ def get_catalog():
                     "price": 55,  # Price hardcoded at $55.
                     "potion_type": [0, 100, 0, 0],  # green potion rgb value
                 }
-            ]
+                )
         if num_blue > 0:
-            return [
+            final_catalog.append (
                 {
                     "sku": "BLUE_POTION_0",  # Basic sku
                     "name": "blue potion",  # Basic name
@@ -50,9 +50,8 @@ def get_catalog():
                     "price": 55,  # Price hardcoded at $55.
                     "potion_type": [0, 0, 100, 0],  # blue potion rgb value
                 }
-            ]
-        else:
-            return [] #no potions of any color available
+            )
+    return final_catalog
 
 
 
