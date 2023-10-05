@@ -10,8 +10,8 @@ class Cart():
 
     def __init__(self, new_cart: NewCart):
         self.id = Cart.id_number
-        Cart.id_number += 1
-        self.items = {}
+        Cart.id_number += 1 #making each cart have its own unique id
+        self.items = {} #holding the items
         self.customer = new_cart.customer
         Cart.carts_storage[self.id] = self
 
@@ -23,7 +23,6 @@ class Cart():
         return bool(self.items)
 
     def set_items(self, sku: str, quantity: int):
-        #quantity should always be 1
         if not sku in self.items:
             self.items[sku] = quantity
 
