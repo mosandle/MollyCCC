@@ -82,7 +82,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                         gold_count = gold_count - barrel.price
 
         #if we have the least amount of green potions in our inventory comparably
-        if num_green_potions < num_red_potions and num_green_potions < num_blue_potions:
+        elif num_green_potions < num_red_potions and num_green_potions < num_blue_potions:
             for barrel in wholesale_catalog:
                 if gold_count >= (barrel.price * barrel.quantity):
                     if barrel.potion_type == [0, 1, 0, 0]:

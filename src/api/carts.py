@@ -28,6 +28,14 @@ def get_cart(cart_id: int):
 class CartItem(BaseModel):
     quantity: int
 
+
+#prices dictionary
+ITEM_PRICES = {
+    "RED_POTION_0": 55,
+    "GREEN_POTION_0": 55,
+    "BLUE_POTION_0": 55,
+}
+
 @router.post("/{cart_id}/items/{item_sku}") #confused by this function! pls review w professor
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
@@ -40,7 +48,6 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
         num_green_potions = row[1]
         num_blue_potions = row[2]
 
-        
         if num_red_potions != 0:
             if item_sku == "RED_POTION_0":
                 cart.set_items(item_sku, cart_item.quantity)
