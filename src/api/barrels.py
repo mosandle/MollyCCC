@@ -20,10 +20,6 @@ class Barrel(BaseModel):
 
 @router.post("/deliver") #only modify in deliver
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
-    """ """
-    print(barrels_delivered)
-    #only need to modify for one small red barrel bc thats the maximum that can be purchased at once. 
-
     with db.engine.begin() as connection:
         for barrel in barrels_delivered:
             sql_statement = text("UPDATE global_inventory SET gold = gold - :price")
@@ -42,6 +38,10 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
             result = connection.execute(sql_statement, {"price": barrel.price})
 
         return "OK"
+        
+    print(barrels_delivered)
+    #only need to modify for one small red barrel bc thats the maximum that can be purchased at once.
+    
 
 # Gets called once a day
 @router.post("/plan")
@@ -49,10 +49,10 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
 
-    #get my amount of gold
-    #if my amount of gold is greater than the cost of one barrel, and i havee less than 10 potions, 
-    #then i will buy one barrel
-    #otherwise, i will buy 0
+#get my amount of gold
+#get the amount of potions i have in each color
+#if i have the least amount of red, i will buy red barrels
+#same for other colors
 
     with db.engine.begin() as connection:
         sql_statement = text("SELECT gold, num_red_potions, num_green_potions, num_blue_potions FROM global_inventory")
@@ -67,7 +67,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         final_purchase_plan = []
         
         #if we have the least amount of red potions in our inventory comparably
-        if num_red_potions < num_green_potions and num_red_potions < num_blue_potions:
+        if num_red_potions <= num_green_potions and num_red_potions <= num_blue_potions:
             for barrel in wholesale_catalog:
                 if gold_count >= (barrel.price * barrel.quantity):
                     if barrel.potion_type == [1, 0, 0, 0]:
@@ -82,7 +82,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                         gold_count = gold_count - barrel.price
 
         #if we have the least amount of green potions in our inventory comparably
-        elif num_green_potions < num_red_potions and num_green_potions < num_blue_potions:
+        elif num_green_potions <= num_red_potions and num_green_potions <= num_blue_potions:
             for barrel in wholesale_catalog:
                 if gold_count >= (barrel.price * barrel.quantity):
                     if barrel.potion_type == [0, 1, 0, 0]:
