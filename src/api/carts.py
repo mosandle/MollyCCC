@@ -19,7 +19,7 @@ def create_cart(new_cart: NewCart):
     return {"cart_id": newCart.id} 
 
 
-@router.get("/{cart_id}") #does not get used so can ignore
+@router.get("/{cart_id}") #does not get used so can ignore?
 def get_cart(cart_id: int):
     """ """
     return {}

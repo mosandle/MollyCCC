@@ -5,14 +5,14 @@ from src import database as db
 
 router = APIRouter()
 
-@router.get("/catalog/", tags=["catalog"]) #endpoint one
+@router.get("/catalog/", tags=["catalog"])
 def get_catalog():
 
     """
     Each unique item combination must have only a single price.
     """
-    # Can return a max of 6 items.
-    #currently lists one single red potion no matter the quantity, if 0 in possession lists 0
+    # Can return a max of 6 items. (currently returning 3)
+    #should be listing all available potions of red, green, and blue
     
     with db.engine.begin() as connection:
         sql_statement = text("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory")
