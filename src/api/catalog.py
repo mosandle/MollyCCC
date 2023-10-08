@@ -46,7 +46,7 @@ def get_catalog():
                 {
                     "sku": "BLUE_POTION_0",  # Basic sku
                     "name": "blue potion",  # Basic name
-                    "quantity": num_blue,  #listing the actual amount of green potions I have
+                    "quantity": num_blue,  #listing the actual amount of blue potions I have
                     "price": 55,  # Price hardcoded at $55.
                     "potion_type": [0, 0, 100, 0],  # blue potion rgb value
                 }
