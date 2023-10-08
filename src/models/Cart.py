@@ -3,7 +3,6 @@ from pydantic import BaseModel
 class NewCart(BaseModel):
     customer: str
 
-
 class Cart():
     carts_storage = {}
     id_number = 0

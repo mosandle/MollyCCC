@@ -24,10 +24,8 @@ def get_cart(cart_id: int):
     """ """
     return {}
 
-
 class CartItem(BaseModel):
     quantity: int
-
 
 #prices dictionary
 ITEM_PRICES = {
@@ -51,10 +49,10 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
         if num_red_potions != 0:
             if item_sku == "RED_POTION_0":
                 cart.set_items(item_sku, cart_item.quantity)
-        elif num_green_potions != 0:
+        if num_green_potions != 0:
             if item_sku == "GREEN_POTION_0":
                 cart.set_items(item_sku, cart_item.quantity)
-        elif num_blue_potions != 0:
+        if num_blue_potions != 0:
             if item_sku == "BLUE_POTION_0":
                 cart.set_items(item_sku, cart_item.quantity)
         else:
@@ -79,20 +77,22 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                 if "RED_POTION_0" in cart.items:
                     red_potion_quantity = cart.items["RED_POTION_0"]
                     sql_statement = text("UPDATE global_inventory SET num_red_potions = num_red_potions - :item_count_red")
-                    result = connection.execute(sql_statement, {"item_count_red": cart.items["RED_POTION_0"]})
                     quantity += red_potion_quantity
+                    result = connection.execute(sql_statement, {"item_count_red": cart.items["RED_POTION_0"]})
 
                 if "GREEN_POTION_0" in cart.items:
                     green_potion_quantity = cart.items["GREEN_POTION_0"]
                     sql_statement2 = text("UPDATE global_inventory SET num_green_potions = num_green_potions - :item_count_green")
-                    result2 = connection.execute(sql_statement2, {"item_count_green": cart.items["GREEN_POTION_0"]})
                     quantity += green_potion_quantity
+                    result2 = connection.execute(sql_statement2, {"item_count_green": cart.items["GREEN_POTION_0"]})
+                   
 
                 if "BLUE_POTION_0" in cart.items:
                     blue_potion_quantity = cart.items["BLUE_POTION_0"]
                     sql_statement3 = text("UPDATE global_inventory SET num_blue_potions = num_blue_potions - :item_count_blue")
-                    result3 = connection.execute(sql_statement3, {"item_count_blue": cart.items["BLUE_POTION_0"]})
                     quantity += blue_potion_quantity
+                    result3 = connection.execute(sql_statement3, {"item_count_blue": cart.items["BLUE_POTION_0"]})
+            
 
                 sql_statement_gold = text("UPDATE global_inventory SET gold = gold + :gold_amount")
                 gold_amount = quantity * 55
