@@ -63,7 +63,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         num_blue_potions = row[3]
         final_purchase_plan = []
         
-        if num_red_potions < 3:
+        if num_red_potions < 1:
             for barrel in wholesale_catalog:
                 if gold_count >= (barrel.price * barrel.quantity):
                     if barrel.potion_type == [1, 0, 0, 0]:
@@ -91,7 +91,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                                     "price": barrel.price
                                 })
                         gold_count = gold_count - barrel.price"""
-        if num_green_potions < 3:
+        if num_green_potions < 1:
             for barrel in wholesale_catalog:
                 if gold_count >= (barrel.price * barrel.quantity):
                     if barrel.potion_type == [0, 1, 0, 0]:
