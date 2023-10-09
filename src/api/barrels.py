@@ -32,7 +32,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
                 result2 = connection.execute(sql_statement2, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
             if barrel.potion_type == [0, 1, 0, 0]:
                 result3 = connection.execute(sql_statement3, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
-            if barrel.potion_type == [0, 1, 0, 0]:
+            if barrel.potion_type == [0, 0, 1, 0]:
                 result4 = connection.execute(sql_statement4, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
             
             result = connection.execute(sql_statement, {"price": barrel.price, "quantity": barrel.quantity})
