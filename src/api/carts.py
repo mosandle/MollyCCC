@@ -95,7 +95,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             
 
                 sql_statement_gold = text("UPDATE global_inventory SET gold = gold + :gold_amount")
-                gold_amount = quantity * 55
+                gold_amount = quantity * 40
                 result_gold = connection.execute(sql_statement_gold, {"gold_amount": gold_amount})
                 
                 return { "total_potions_bought": quantity, "total_gold_paid": gold_amount }

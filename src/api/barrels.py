@@ -20,6 +20,7 @@ class Barrel(BaseModel):
 
 @router.post("/deliver") #only modify in deliver
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
+    print(barrels_delivered)    
     with db.engine.begin() as connection:
         for barrel in barrels_delivered:
             sql_statement = text("UPDATE global_inventory SET gold = gold - (:price * :quantity)")
@@ -39,7 +40,6 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 
         return "OK"
         
-    print(barrels_delivered)    
 
 # Gets called once a day
 @router.post("/plan")
