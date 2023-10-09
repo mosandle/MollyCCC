@@ -29,9 +29,9 @@ class CartItem(BaseModel):
 
 #prices dictionary
 ITEM_PRICES = {
-    "RED_POTION_0": 55,
-    "GREEN_POTION_0": 55,
-    "BLUE_POTION_0": 55,
+    "RED_POTION_0": 40,
+    "GREEN_POTION_0": 40,
+    "BLUE_POTION_0": 40,
 }
 
 @router.post("/{cart_id}/items/{item_sku}") #confused by this function! pls review w professor

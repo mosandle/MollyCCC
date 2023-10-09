@@ -27,7 +27,7 @@ def get_catalog():
                     "sku": "RED_POTION_0",  # Basic sku
                     "name": "red potion",  # Basic name
                     "quantity": num_red,  #listing the actual amount of red potions I have
-                    "price": 55,  # Price hardcoded at $55.
+                    "price": 40,  # Price hardcoded at $55.
                     "potion_type": [100, 0, 0, 0],  # Red potion rgb value
                 }
                 )
@@ -37,7 +37,7 @@ def get_catalog():
                     "sku": "GREEN_POTION_0",  # Basic sku
                     "name": "green potion",  # Basic name
                     "quantity": num_green,  #listing the actual amount of green potions I have
-                    "price": 55,  # Price hardcoded at $55.
+                    "price": 40,  # Price hardcoded at $55.
                     "potion_type": [0, 100, 0, 0],  # green potion rgb value
                 }
                 )
@@ -47,7 +47,7 @@ def get_catalog():
                     "sku": "BLUE_POTION_0",  # Basic sku
                     "name": "blue potion",  # Basic name
                     "quantity": num_blue,  #listing the actual amount of blue potions I have
-                    "price": 55,  # Price hardcoded at $55.
+                    "price": 40,  # Price hardcoded at $55.
                     "potion_type": [0, 0, 100, 0],  # blue potion rgb value
                 }
             )
