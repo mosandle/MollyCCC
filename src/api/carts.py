@@ -29,9 +29,9 @@ class CartItem(BaseModel):
 
 #prices dictionary
 ITEM_PRICES = {
-    "RED_POTION_0": 40,
-    "GREEN_POTION_0": 40,
-    "BLUE_POTION_0": 40,
+    "RED_POTION_0": 1,
+    "GREEN_POTION_0": 1,
+    "BLUE_POTION_0": 1,
 }
 
 @router.post("/{cart_id}/items/{item_sku}") #confused by this function! pls review w professor
@@ -95,7 +95,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             
 
                 sql_statement_gold = text("UPDATE global_inventory SET gold = gold + :gold_amount")
-                gold_amount = quantity * 40
+                gold_amount = quantity * 1
                 result_gold = connection.execute(sql_statement_gold, {"gold_amount": gold_amount})
                 
                 return { "total_potions_bought": quantity, "total_gold_paid": gold_amount }
