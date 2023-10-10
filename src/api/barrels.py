@@ -62,6 +62,20 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         num_green_potions = row[2]
         num_blue_potions = row[3]
         final_purchase_plan = []
+
+        #defaulting to blue if same amount of mL, so will probably end up with hella blue potions
+        if num_blue_potions < 1:
+            for barrel in wholesale_catalog:
+                if gold_count >= (barrel.price * barrel.quantity):
+                    if barrel.potion_type == [0, 0, 1, 0]:
+                        final_purchase_plan.append({
+                                    "sku": barrel.sku,
+                                    "quantity": barrel.quantity,
+                                    "ml_per_barrel": barrel.ml_per_barrel,
+                                    "potion_type": barrel.potion_type,
+                                    "price": barrel.price
+                                })
+                        gold_count = gold_count -  (barrel.price * barrel.quantity)
         
         if num_red_potions < 1:
             for barrel in wholesale_catalog:
@@ -95,21 +109,6 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
             for barrel in wholesale_catalog:
                 if gold_count >= (barrel.price * barrel.quantity):
                     if barrel.potion_type == [0, 1, 0, 0]:
-                        final_purchase_plan.append({
-                                    "sku": barrel.sku,
-                                    "quantity": barrel.quantity,
-                                    "ml_per_barrel": barrel.ml_per_barrel,
-                                    "potion_type": barrel.potion_type,
-                                    "price": barrel.price
-                                })
-                        gold_count = gold_count -  (barrel.price * barrel.quantity)
-
-
-        #defaulting to blue if same amount of mL, so will probably end up with hella blue potions
-        if num_blue_potions < 3:
-            for barrel in wholesale_catalog:
-                if gold_count >= (barrel.price * barrel.quantity):
-                    if barrel.potion_type == [0, 0, 1, 0]:
                         final_purchase_plan.append({
                                     "sku": barrel.sku,
                                     "quantity": barrel.quantity,
