@@ -57,7 +57,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         result = connection.execute(sql_statement)
         row = result.first()  
         
-        gold_count = row[0] 
+        gold_count = row[0]
         num_red_potions = row[1]
         num_green_potions = row[2]
         num_blue_potions = row[3]
