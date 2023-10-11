@@ -44,7 +44,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
                 result = connection.execute(sql_statement, {"quantity": potion.quantity})
                 result2 = connection.execute(sql_statement2, {"quantity": potion.quantity})
             else:
-                 return "not okay serious problem occurring"
+                 return "something is wrong"
 
     return "OK"
 
