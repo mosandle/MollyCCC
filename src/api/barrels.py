@@ -64,7 +64,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         final_purchase_plan = []
 
         #defaulting to blue if same amount of mL, so will probably end up with hella blue potions
-        if num_blue_potions < 1:
+        if num_blue_potions < 5:
             for barrel in wholesale_catalog:
                 if gold_count >= (barrel.price * barrel.quantity):
                     if barrel.potion_type == [0, 0, 1, 0]:
@@ -77,7 +77,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                                 })
                         gold_count = gold_count -  (barrel.price * barrel.quantity)
         
-        if num_red_potions < 1:
+        if num_red_potions < 5:
             for barrel in wholesale_catalog:
                 if gold_count >= (barrel.price * barrel.quantity):
                     if barrel.potion_type == [1, 0, 0, 0]:
@@ -105,7 +105,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                                     "price": barrel.price
                                 })
                         gold_count = gold_count - barrel.price"""
-        if num_green_potions < 1:
+        if num_green_potions < 5:
             for barrel in wholesale_catalog:
                 if gold_count >= (barrel.price * barrel.quantity):
                     if barrel.potion_type == [0, 1, 0, 0]:
