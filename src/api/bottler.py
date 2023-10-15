@@ -22,29 +22,47 @@ class PotionInventory(BaseModel):
 @router.post("/deliver")
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
-    print(potions_delivered)
-
     with db.engine.begin() as connection:
         for potion in potions_delivered:
-            if potion.potion_type == [100, 0, 0, 0]: #red potions
-                sql_statement = text("UPDATE global_inventory SET num_red_potions = num_red_potions + :quantity")
-                sql_statement2 = text("UPDATE global_inventory SET num_red_ml = num_red_ml - (:quantity * 100)")
-                result = connection.execute(sql_statement, {"quantity": potion.quantity})
-                result2 = connection.execute(sql_statement2, {"quantity": potion.quantity})
-            
-            elif potion.potion_type == [0, 100, 0, 0]: #green potions
-                sql_statement = text("UPDATE global_inventory SET num_green_potions = num_green_potions + :quantity")
-                sql_statement2 = text("UPDATE global_inventory SET num_green_ml = num_green_ml - (:quantity * 100)")
-                result = connection.execute(sql_statement, {"quantity": potion.quantity})
-                result2 = connection.execute(sql_statement2, {"quantity": potion.quantity})
-
-            elif potion.potion_type == [0, 0, 100, 0]: #blue potions
-                sql_statement = text("UPDATE global_inventory SET num_blue_potions = num_blue_potions + :quantity")
-                sql_statement2 = text("UPDATE global_inventory SET num_blue_ml = num_blue_ml - (:quantity * 100)")
-                result = connection.execute(sql_statement, {"quantity": potion.quantity})
-                result2 = connection.execute(sql_statement2, {"quantity": potion.quantity})
+            # Get the SKU of the delivered potion based on its type
+            sql_statement_sku = text("SELECT sku FROM potions_inventory WHERE type = :type")
+            result_sku = connection.execute(sql_statement_sku, {"type": potion.potion_type})
+            row_sku = result_sku.first()
+            if row_sku:
+                sku = row_sku[0]
             else:
-                 return "something is wrong"
+                return "Potion type not found in inventory, something went wrong"
+
+            # Update the quantity for the retrieved SKU
+            sql_statement_quantity = text("UPDATE potions_inventory SET quantity = quantity + :quantity WHERE sku = :sku")
+            result_quantity = connection.execute(sql_statement_quantity, {"sku": sku, "quantity": potion.quantity})
+
+            if not result_quantity.rowcount:
+                return "Failed to update potion quantity, something went wrong"
+
+            # Decrease the corresponding mL in your inventory
+            red_mL, green_mL, blue_mL, dark_mL = potion.potion_type  # Assuming [red, green, blue, dark]
+
+            sql_statement_mL = text(
+                "UPDATE global_inventory "
+                "SET num_red_ml = num_red_ml - (:quantity * :red_mL), "
+                "num_green_ml = num_green_ml - (:quantity * :green_mL), "
+                "num_blue_ml = num_blue_ml - (:quantity * :blue_mL), "
+                "num_dark_ml = num_dark_ml - (:quantity * :dark_mL) "
+                "WHERE :quantity > 0"
+            )
+            result_mL = connection.execute(
+                sql_statement_mL,
+                {
+                    "quantity": potion.quantity,
+                    "red_mL": red_mL,
+                    "green_mL": green_mL,
+                    "blue_mL": blue_mL,
+                    "dark_mL": dark_mL,
+                },
+            )
+            if not result_mL.rowcount:
+                return "Failed to update inventory ml, something went wrong"
 
     return "OK"
 
@@ -53,45 +71,45 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
 def get_bottle_plan():
     """
     Go from barrel to bottle.
-    """
-    # Each bottle has a quantity of what proportion of red, blue, and
-    # green potion to add.
-    # Expressed in integers from 1 to 100 that must sum up to 100.
-
-    # Initial logic: bottle all barrels into red potions.
+            """
+    
+    return_value =[]
 
     with db.engine.begin() as connection:
-        #only bottles if there is an amount of mL divisible by 100 available, otherwise waits
         sql_statement = text("SELECT num_red_ml, num_green_ml, num_blue_ml FROM global_inventory")
         result = connection.execute(sql_statement)
-        row = result.first()   
+        row = result.first()
         num_red_ml = row[0]
         num_green_ml = row[1]
         num_blue_ml = row[2]
+        final_bottle_plan = []
 
-        final_bottler_plan = []
-        
-        if num_red_ml != 0:
-            if num_red_ml % 100 == 0:
-                    final_bottler_plan.append(
-                        {
-                            "potion_type": [100, 0, 0, 0],
-                            "quantity": int(num_red_ml / 100),
-                        })
-                    
-        if num_green_ml != 0:
-            if num_green_ml % 100 == 0:
-                    final_bottler_plan.append(
-                        {
-                            "potion_type": [0, 100, 0, 0],
-                            "quantity": int(num_green_ml / 100),
-                        })
-                    
-        if num_blue_ml != 0:
-            if num_blue_ml % 100 == 0:
-                    final_bottler_plan.append(
-                        {
-                            "potion_type": [0, 0, 100, 0],
-                            "quantity": int(num_blue_ml / 100),
-                        })
-        return final_bottler_plan
+        sql_statement2 = text("SELECT type FROM potions_inventory ORDER by quantity")
+        result = connection.execute(sql_statement2)
+        rows = result.fetchall()
+
+        while True:
+            found_valid_potion = False
+            for potion_type in rows:
+                red_mL, green_mL, blue_mL, _ = potion_type[0]
+
+                if red_mL <= num_red_ml and green_mL <= num_green_ml and blue_mL <= num_blue_ml:
+                    if red_mL + blue_mL + green_mL != 100:
+                        return "error occurred, improper mixing proportions"
+                    else:
+                        potion_entry = {
+                            "potion_type": [red_mL, green_mL, blue_mL, 0],  #dark is 0 for now
+                            "quantity": 1,
+                        }
+
+                        final_bottle_plan.append(potion_entry)
+                        # Subtract the used mL from inventory
+                        num_red_ml -= red_mL
+                        num_green_ml -= green_mL
+                        num_blue_ml -= blue_mL
+                        found_valid_potion = True
+
+            if not found_valid_potion:
+                break
+
+        return final_bottle_plan
