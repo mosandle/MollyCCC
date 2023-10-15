@@ -27,17 +27,17 @@ def get_inventory():
         for row in rows:
             total_potion_count += row
         
-        sql_statement = text("SELECT num_red_ml, num_green_ml, num_blue_ml FROM global_inventory")
-        result = connection.execute(sql_statement)
-        rows = result.fetchall()
+        sql_statement2 = text("SELECT num_red_ml, num_green_ml, num_blue_ml FROM global_inventory")
+        result2 = connection.execute(sql_statement2)
+        rows = result2.fetchall()
         red = rows[0]
         green = rows[1]
         blue = rows[2]
         total_ml_count = red + green + blue
 
-        sql_statement = text("SELECT gold FROM global_inventory")
-        result = connection.execute(sql_statement)
-        rows = result.fetchall()
+        sql_statement3 = text("SELECT gold FROM global_inventory")
+        result3 = connection.execute(sql_statement3)
+        rows = result3.fetchall()
         gold = rows[0]
         total_gold_count = gold
 
