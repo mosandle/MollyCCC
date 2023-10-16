@@ -63,9 +63,14 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
             barrel.potion_type = modified_list
 
             sql_statement2 = text("SELECT quantity FROM potions_inventory WHERE :type = type")
-            result2 = connection.execute(sql_statement2, {"type": barrel.potion_type})
+            result2 = connection.execute(sql_statement2, {"type": modified_list})
+
+            print(modified_list)
             row2 = result2.first()
+            print(row2)
             quantity = row2[0]
+            print(quantity)
+
             
             # Determine if you need to purchase this barrel
             if quantity < 60 and gold_count >= (barrel.price * barrel.quantity):

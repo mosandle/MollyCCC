@@ -24,7 +24,7 @@ def get_inventory():
         sql_statement = text("SELECT quantity FROM potions_inventory")
         result = connection.execute(sql_statement)
         rows = result.fetchall()
-        print(rows)
+        #print(rows)
         for row in rows:
             total_potion_count += row[0]  # Access the actual value
 

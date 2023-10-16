@@ -107,7 +107,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                     purple_potion_quantity = cart.items["PURPLE_POTION_0"]
                     sql_statement4 = text("UPDATE potions_inventory SET quantity = quantity - :item_count_purple WHERE sku == :sku")
                     quantity += purple_potion_quantity
-                    result3 = connection.execute(sql_statement4, {"sku": "PUPRLE_POTION_0", "item_count_purple": cart.items["PURPLE_POTION_0"]})
+                    result3 = connection.execute(sql_statement4, {"sku": "PURPLE_POTION_0", "item_count_purple": cart.items["PURPLE_POTION_0"]})
 
                 if "YELLOW_POTION_0" in cart.items:
                     yellow_potion_quantity = cart.items["YELLOW_POTION_0"]
