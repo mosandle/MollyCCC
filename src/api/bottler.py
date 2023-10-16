@@ -43,7 +43,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
             red_mL, green_mL, blue_mL, dark_mL = potion.potion_type  # Assuming [red, green, blue, dark]
 
             sql_statement_mL = text(
-                "UPDATE global_inventory"
+                "UPDATE global_inventory "
                 "SET num_red_ml = num_red_ml - (:quantity * :red_mL), "
                 "num_green_ml = num_green_ml - (:quantity * :green_mL), "
                 "num_blue_ml = num_blue_ml - (:quantity * :blue_mL), "
