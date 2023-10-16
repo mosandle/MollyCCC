@@ -41,29 +41,29 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
     cart = Cart.retrieve(cart_id)
     with db.engine.begin() as connection:
-        sql_statement = text("SELECT sku, quantity FROM potions_inventory WHERE quantity > 0 ORDER by id")
+        sql_statement = text("SELECT quantity FROM potions_inventory")
         result = connection.execute(sql_statement)
-        row = result.first()   
+        row = result.fetchall()   
         num_red_potions = row[0]
         num_green_potions = row[1]
         num_blue_potions = row[2]
-        num_purple_potions = row[4]
-        num_yellow_potions = row[5]
+        num_purple_potions = row[3]
+        num_yellow_potions = row[4]
 
 
-        if num_red_potions:
+        if num_red_potions != 0:
             if item_sku == "RED_POTION_0":
                 cart.set_items(item_sku, cart_item.quantity)
-        if num_green_potions:
+        if num_green_potions != 0:
             if item_sku == "GREEN_POTION_0":
                 cart.set_items(item_sku, cart_item.quantity)
-        if num_blue_potions:
+        if num_blue_potions != 0:
             if item_sku == "BLUE_POTION_0":
                 cart.set_items(item_sku, cart_item.quantity)
-        if num_purple_potions:
+        if num_purple_potions!= 0:
             if item_sku == "PURPLE_POTION_0":
                 cart.set_items(item_sku, cart_item.quantity)
-        if num_yellow_potions:
+        if num_yellow_potions!= 0:
             if item_sku == "YELLOW_POTION_0":
                 cart.set_items(item_sku, cart_item.quantity)
         else:
@@ -87,31 +87,31 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             with db.engine.begin() as connection:
                 if "RED_POTION_0" in cart.items:
                     red_potion_quantity = cart.items["RED_POTION_0"]
-                    sql_statement = text("UPDATE potions_inventory SET quantity = quantity - :item_count_red WHERE sku == :sku")
+                    sql_statement = text("UPDATE potions_inventory SET quantity = quantity - :item_count_red WHERE sku = :sku")
                     quantity += red_potion_quantity
                     result = connection.execute(sql_statement, {"sku": "RED_POTION_0", "item_count_red": cart.items["RED_POTION_0"]})
 
                 if "GREEN_POTION_0" in cart.items:
                     green_potion_quantity = cart.items["GREEN_POTION_0"]
-                    sql_statement2 = text("UPDATE potions_inventory SET quantity = quantity - :item_count_green WHERE sku == :sku")
+                    sql_statement2 = text("UPDATE potions_inventory SET quantity = quantity - :item_count_green WHERE sku = :sku")
                     quantity += green_potion_quantity
                     result2 = connection.execute(sql_statement2, {"sku": "GREEN_POTION_0", "item_count_green": cart.items["GREEN_POTION_0"]})
             
                 if "BLUE_POTION_0" in cart.items:
                     blue_potion_quantity = cart.items["BLUE_POTION_0"]
-                    sql_statement3 = text("UPDATE potions_inventory SET quantity = quantity - :item_count_blue WHERE sku == :sku")
+                    sql_statement3 = text("UPDATE potions_inventory SET quantity = quantity - :item_count_blue WHERE sku = :sku")
                     quantity += blue_potion_quantity
                     result3 = connection.execute(sql_statement3, {"sku": "BLUE_POTION_0", "item_count_blue": cart.items["BLUE_POTION_0"]})
                 
                 if "PURPLE_POTION_0" in cart.items:
                     purple_potion_quantity = cart.items["PURPLE_POTION_0"]
-                    sql_statement4 = text("UPDATE potions_inventory SET quantity = quantity - :item_count_purple WHERE sku == :sku")
+                    sql_statement4 = text("UPDATE potions_inventory SET quantity = quantity - :item_count_purple WHERE sku = :sku")
                     quantity += purple_potion_quantity
                     result3 = connection.execute(sql_statement4, {"sku": "PURPLE_POTION_0", "item_count_purple": cart.items["PURPLE_POTION_0"]})
 
                 if "YELLOW_POTION_0" in cart.items:
                     yellow_potion_quantity = cart.items["YELLOW_POTION_0"]
-                    sql_statement5 = text("UPDATE potions_inventory SET quantity = quantity - :item_count_yellow WHERE sku == :sku")
+                    sql_statement5 = text("UPDATE potions_inventory SET quantity = quantity - :item_count_yellow WHERE sku = :sku")
                     quantity += yellow_potion_quantity
                     result3 = connection.execute(sql_statement5, {"sku": "YELLOW_POTION_0", "item_count_yellow": cart.items["YELLOW_POTION_0"]})
             
