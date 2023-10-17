@@ -13,10 +13,20 @@ router = APIRouter(
     dependencies=[Depends(auth.get_api_key)],
 )
 
-@router.post("/")
+class NewCart(BaseModel):
+    customer: str
+
+@router.post("/") #works
 def create_cart(new_cart: NewCart):
-    newCart = Cart(new_cart)
-    return {"cart_id": newCart.id} 
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("""
+                                INSERT INTO carts (customer_name) VALUES 
+                                (:customer_name)
+                                RETURNING cart_id
+                                """),
+                                  ({"customer_name": new_cart.customer}))
+    cart_id = result.scalar()
+    return {"cart_id": cart_id}
 
 
 @router.get("/{cart_id}") #does not get used so can ignore?
@@ -27,18 +37,20 @@ def get_cart(cart_id: int):
 class CartItem(BaseModel):
     quantity: int
 
-#prices dictionary
-ITEM_PRICES = {
-    "RED_POTION_0": 55,
-    "GREEN_POTION_0": 55,
-    "BLUE_POTION_0": 55,
-    "PURPLE_POTION_0": 55,
-    "YELLOW_POTION_0": 55,
-}
-
 @router.post("/{cart_id}/items/{item_sku}") #confused by this function! pls review w professor
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
+
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text("""
+                    INSERT INTO cart_items (cart_id, quantity, id) 
+                    SELECT :cart_id, :quantity, id
+                    FROM potions_inventory WHERE potions_inventory.sku = :item_sku """),
+                    [{"cart_id": cart_id, "quantity": cart_item.quantity, "item_sku": item_sku}])
+        #print("current cart:" item_sku, "current items:", cart_item.quantity)
+    return "OK"
+
+    """
     cart = Cart.retrieve(cart_id)
     with db.engine.begin() as connection:
         sql_statement = text("SELECT quantity FROM potions_inventory")
@@ -70,7 +82,7 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
             return {"error. please try again later"}
         
         return "OK"
-
+"""
 
 class CartCheckout(BaseModel):
     payment: str
@@ -78,7 +90,37 @@ class CartCheckout(BaseModel):
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
     """ """
+    gold_paid = 0
+    potions_bought = 0
 
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(
+            """ UPDATE potions_inventory
+            SET quantity = potions_inventory.quantity - cart_items.quantity
+            FROM cart_items
+            WHERE potions_inventory.id = cart_items.id and cart_items.cart_id = :cart_id;"""),
+            [{"cart_id": cart_id}])
+        
+        result = connection.execute(sqlalchemy.text("SELECT SUM(potions_inventory.price * cart_items.quantity)\
+                                    AS gold_paid, SUM(cart_items.quantity) AS potions_bought FROM potions_inventory\
+                                    JOIN cart_items ON potions_inventory.id = cart_items.id WHERE cart_items.cart_id = :cart_id"),
+                                    [{"cart_id": cart_id}])
+    
+        row = result.first()
+        gold_paid = row.gold_paid
+        potions_bought = row.potions_bought
+
+        connection.execute(sqlalchemy.text("""
+            UPDATE global_inventory
+            SET gold = gold + :gold_paid,
+            total_potions = total_potions - :potions_bought
+            """ ),
+            {"gold_paid": gold_paid, "potions_bought": potions_bought})
+
+    return {"total_potions_bought": potions_bought, "gold_paid": gold_paid}
+
+
+"""
     cart = Cart.retrieve(cart_id)
     quantity = 0
     if cart:
@@ -125,3 +167,4 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         else:
             return { "total_potions_bought": 0, "total_gold_paid": 0 }
     return {"Error. Cart not found"}
+    """

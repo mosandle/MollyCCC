@@ -21,7 +21,7 @@ def get_inventory():
     total_gold_count = 0
 
     with db.engine.begin() as connection:
-        sql_statement = text("SELECT quantity FROM potions_inventory")
+        sql_statement = text("SELECT total_potions FROM global_inventory")
         result = connection.execute(sql_statement)
         rows = result.fetchall()
         #print(rows)
