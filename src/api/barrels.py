@@ -21,28 +21,37 @@ class Barrel(BaseModel):
 
 @router.post("/deliver") #only modify in deliver
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
-    print(barrels_delivered)    
+    print(barrels_delivered)
     with db.engine.begin() as connection:
         for barrel in barrels_delivered:
-            sql_statement = text("INSERT INTO gold_ledger_items (gold_delta) VALUES (:price * :quantity * -1)")
-            sql_statement2 = text("INSERT INTO barrel_ledger_items (red_ml_delta) VALUES (:ml_per_barrel * :quantity)")
-            sql_statement3 = text("INSERT INTO barrel_ledger_items (green_ml_delta) VALUES (:ml_per_barrel * :quantity)")
-            sql_statement4 = text("INSERT INTO barrel_ledger_items (blue_ml_delta) VALUES (:ml_per_barrel * :quantity)")
-            sql_statement5 = text("INSERT INTO barrel_ledger_items (dark_ml_delta) VALUES (:ml_per_barrel * :quantity)")
+            # Define the SQL statement with dynamic columns
+            sql_statement = text("""
+                INSERT INTO barrel_ledger_items (red_ml_delta, green_ml_delta, blue_ml_delta, dark_ml_delta)
+                VALUES (
+                    CASE WHEN :potion_type = ARRAY[100, 0, 0, 0] THEN :ml_per_barrel * :quantity ELSE 0 END,
+                    CASE WHEN :potion_type = ARRAY[0, 100, 0, 0] THEN :ml_per_barrel * :quantity ELSE 0 END,
+                    CASE WHEN :potion_type = ARRAY[0, 0, 100, 0] THEN :ml_per_barrel * :quantity ELSE 0 END,
+                    CASE WHEN :potion_type = ARRAY[0, 0, 0, 100] THEN :ml_per_barrel * :quantity ELSE 0 END
+                )
+            """)
 
-            if barrel.potion_type == [100, 0, 0, 0]:
-                result2 = connection.execute(sql_statement2, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
-            if barrel.potion_type == [0, 100, 0, 0]:
-                result3 = connection.execute(sql_statement3, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
-            if barrel.potion_type == [0, 0, 100, 0]:
-                result4 = connection.execute(sql_statement4, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
-            if barrel.potion_type == [0, 0, 0, 100]:
-                result4 = connection.execute(sql_statement5, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
-            
-            result = connection.execute(sql_statement, {"price": barrel.price, "quantity": barrel.quantity})
+            # Execute the statement with the appropriate parameters
+            result = connection.execute(sql_statement, {
+                "ml_per_barrel": barrel.ml_per_barrel,
+                "quantity": barrel.quantity,
+                "potion_type": barrel.potion_type
+            })
+
+            # Handle other operations, if necessary
+            # For example, inserting values into gold_ledger_items
+            sql_statement_gold = text("INSERT INTO gold_ledger_items (gold_delta) VALUES (:price * :quantity * -1)")
+            print(barrel.quantity)
+            print(barrel.price)
+            result_gold = connection.execute(sql_statement_gold, {"price": barrel.price, "quantity": barrel.quantity})
 
         return "OK"
-        
+
+
 
 # Gets called once a day
 @router.post("/plan")
