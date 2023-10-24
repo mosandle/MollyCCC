@@ -62,25 +62,29 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     with db.engine.begin() as connection:
         stuff = connection.execute(sqlalchemy.text(
             """
-            SELECT potion_id, quantity 
+            SELECT id, quantity 
             FROM cart_items
             WHERE cart_items.cart_id = :cart_id
-            """), [{"cart_id": cart_id}])
+            """), 
+            [{"cart_id": cart_id}])
         
         for row in stuff:
             connection.execute(sqlalchemy.text(
             """
-            INSERT INTO potion_ledger_items (potions_delta, potion_id) 
-            VALUES (:potions_delta, :potion_id)
-            """), [{"potions_delta": -row.quantity, "potion_id": row.potion_id}])
+            INSERT INTO potion_ledger_items (potion_delta, potion_id) 
+            VALUES (:potion_delta, :potion_id)
+            """), 
+            [{"potion_delta": -row.quantity, "potion_id": row.id}])
         
         result = connection.execute(sqlalchemy.text(
             """
-            SELECT SUM(potions_inventory.price * cart_items.quantity)\
-            AS gold_paid, SUM(cart_items.quantity) \
-            AS potions_bought SELECT SUM(gold_delta) AS gold FROM gold_ledger_items
+            SELECT SUM(potions_inventory.price * cart_items.quantity) AS gold_paid,
+            SUM(cart_items.quantity) AS potions_bought 
+            FROM cart_items
 
-            JOIN cart_items ON potions_inventory.id = cart_items.id WHERE cart_items.cart_id = :cart_id
+            JOIN potions_inventory ON cart_items.id = potions_inventory.id 
+            WHERE cart_items.cart_id = :cart_id;
+
             """),
             [{"cart_id": cart_id}])
     
@@ -89,9 +93,8 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         potions_bought = row.potions_bought
 
         connection.execute(sqlalchemy.text("""
-            INSERT INTO gold_ledger_items (gold_delta) VALUES (:gold_paid),
-            total_potions = total_potions - :potions_bought
+            INSERT INTO gold_ledger_items (gold_delta) VALUES (:gold_paid)
             """ ),
-            {"gold_paid": gold_paid, "potions_bought": potions_bought})
+            [{"gold_paid": gold_paid}])
 
     return {"total_potions_bought": potions_bought, "gold_paid": gold_paid}
