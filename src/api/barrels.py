@@ -30,13 +30,13 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
             sql_statement4 = text("INSERT INTO barrel_ledger_items (blue_ml_delta) VALUES (:ml_per_barrel * :quantity)")
             sql_statement5 = text("INSERT INTO barrel_ledger_items (dark_ml_delta) VALUES (:ml_per_barrel * :quantity)")
 
-            if barrel.potion_type == [1, 0, 0, 0]:
+            if barrel.potion_type == [100, 0, 0, 0]:
                 result2 = connection.execute(sql_statement2, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
-            if barrel.potion_type == [0, 1, 0, 0]:
+            if barrel.potion_type == [0, 100, 0, 0]:
                 result3 = connection.execute(sql_statement3, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
-            if barrel.potion_type == [0, 0, 1, 0]:
+            if barrel.potion_type == [0, 0, 100, 0]:
                 result4 = connection.execute(sql_statement4, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
-            if barrel.potion_type == [0, 0, 0, 1]:
+            if barrel.potion_type == [0, 0, 0, 100]:
                 result4 = connection.execute(sql_statement5, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
             
             result = connection.execute(sql_statement, {"price": barrel.price, "quantity": barrel.quantity})
