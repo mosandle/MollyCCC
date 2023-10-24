@@ -24,12 +24,11 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     print(barrels_delivered)    
     with db.engine.begin() as connection:
         for barrel in barrels_delivered:
-            sql_statement = text("INSERT INTO gold_ledger_items (gold_delta) VALUES (:price * :quantity * -1);")
-            sql_statement2 = text("INSERT INTO barrel_ledger_items (red_ml_delta) VALUES (:ml_per_barrel * :quantity);")
-            sql_statement3 = text("INSERT INTO barrel_ledger_items (green_ml_delta) VALUES (:ml_per_barrel * :quantity);")
-            sql_statement4 = text("INSERT INTO barrel_ledger_items (blue_ml_delta) VALUES (:ml_per_barrel * :quantity);")
-            sql_statement5 = text("INSERT INTO barrel_ledger_items (dark_ml_delta) VALUES (:ml_per_barrel * :quantity);")
-
+            sql_statement = text("INSERT INTO gold_ledger_items (gold_delta) VALUES (:price * :quantity * -1)")
+            sql_statement2 = text("INSERT INTO barrel_ledger_items (red_ml_delta) VALUES (:ml_per_barrel * :quantity)")
+            sql_statement3 = text("INSERT INTO barrel_ledger_items (green_ml_delta) VALUES (:ml_per_barrel * :quantity)")
+            sql_statement4 = text("INSERT INTO barrel_ledger_items (blue_ml_delta) VALUES (:ml_per_barrel * :quantity)")
+            sql_statement5 = text("INSERT INTO barrel_ledger_items (dark_ml_delta) VALUES (:ml_per_barrel * :quantity)")
 
             if barrel.potion_type == [1, 0, 0, 0]:
                 result2 = connection.execute(sql_statement2, {"ml_per_barrel": barrel.ml_per_barrel, "quantity": barrel.quantity})
@@ -60,21 +59,23 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         final_purchase_plan = []
 
         # Loop through barrels in the catalog
-        for barrel in wholesale_catalog:           
+        for barrel in wholesale_catalog:
             modified_list = [100 if x == 1 else x for x in barrel.potion_type]
             barrel.potion_type = modified_list
 
-            sql_statement2 = text("SELECT SUM(potion_delta) FROM potion_ledger_items WHERE :type = type")
-            result2 = connection.execute(sql_statement2, {"type": modified_list})
+            # Get the ID of the potion in potion_ledger_items based on the potion_type
+            sql_get_potion_id = text("SELECT id FROM potions_inventory WHERE type = :type")
+            result_get_potion_id = connection.execute(sql_get_potion_id, {"type": modified_list})
+            potion_id = result_get_potion_id.scalar()
 
-            #print(modified_list)
-            row2 = result2.first()
-            #print(row2)
-            quantity = row2[0]
-            #print(quantity)
+            if potion_id is not None:
+                # Calculate the sum of potion_delta for the specific potion type
+                sql_statement2 = text("SELECT SUM(potion_delta) FROM potion_ledger_items WHERE potion_id = :potion_id")
+                result2 = connection.execute(sql_statement2, {"potion_id": potion_id})
+                quantity = result2.scalar()
             
             # Determine if you need to purchase this barrel
-            if quantity < 60 and gold_count >= (barrel.price * barrel.quantity):
+            if quantity is not None and quantity < 60 and gold_count >= (barrel.price * barrel.quantity):
                 final_purchase_plan.append({
                     "sku": barrel.sku,
                     "quantity": barrel.quantity,
