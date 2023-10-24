@@ -17,7 +17,7 @@ def get_catalog():
     with db.engine.begin() as connection:
         #need sku, name, quantity, price, type          
         sql_statement = text("""
-                                SELECT sku, name, quantity, price, type, SUM(potion_ledger_items.potion_delta) AS quantity
+                                SELECT sku, name, SUM(potion_ledger_items.potion_delta) AS quantity, type, price
                                 FROM potions_inventory
                                 JOIN potion_ledger_items ON potions_inventory.id = potion_ledger_items.potion_id
                                 GROUP BY potions_inventory.id
@@ -29,7 +29,7 @@ def get_catalog():
         final_catalog = []
         
         for row in rows:
-            sku, name, quantity, price, type = row
+            sku, name, quantity, type, price, = row
             catalog_entry = {
                 "sku": sku,
                 "name": name,
