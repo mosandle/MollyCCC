@@ -34,7 +34,8 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
                 return "Potion type not found in inventory, something went wrong"
 
             # Update the quantity for the retrieved SKU
-            sql_statement_quantity = text("UPDATE potions_inventory SET quantity = quantity + :quantity WHERE sku = :sku")
+            sql_statement_quantity = text("""
+            INSERT INTO potion_ledger_items (potions_delta) VALUES (:quantity) WHERE sku = :sku""")
             result_quantity = connection.execute(sql_statement_quantity, {"sku": sku, "quantity": potion.quantity})
 
             if not result_quantity.rowcount:
@@ -43,12 +44,13 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
             red_mL, green_mL, blue_mL, dark_mL = potion.potion_type  # Assuming [red, green, blue, dark]
 
             sql_statement_mL = text(
-                "UPDATE global_inventory "
-                "SET num_red_ml = num_red_ml - (:quantity * :red_mL), "
-                "num_green_ml = num_green_ml - (:quantity * :green_mL), "
-                "num_blue_ml = num_blue_ml - (:quantity * :blue_mL), "
-                "num_dark_ml = num_dark_ml - (:quantity * :dark_mL) "
-                "WHERE :quantity > 0"
+                """
+                INSERT INTO barrel_ledger_items (red_ml_delta) VALUES (:quantity * :red_mL * -1)
+                INSERT INTO barrel_ledger_items (green_ml_delta) VALUES (:quantity * :green_mL * -1)
+                INSERT INTO barrel_ledger_items (blue_ml_delta) VALUES (:quantity * :blue_mL * -1)
+                INSERT INTO barrel_ledger_items (dark_ml_delta) VALUES (:quantity * :dark_mL * -1)
+                "WHERE :quantity > 0
+                """
             )
             result_mL = connection.execute(
                 sql_statement_mL,
@@ -72,13 +74,25 @@ def get_bottle_plan():
     Go from barrel to bottle.
             """
     with db.engine.begin() as connection:
-        sql_statement = text("SELECT num_red_ml, num_green_ml, num_blue_ml, num_dark_ml FROM global_inventory")
+        sql_statement = text("""SELECT SUM(red_ml_delta FROM barrel_ledger_items)""")
+        sql_statement2 = text("""SELECT SUM(green_ml_delta FROM barrel_ledger_items) """)        
+        sql_statement3 = text("""SELECT SUM(blue_ml_delta FROM barrel_ledger_items)""")        
+        sql_statement4 = text("""SELECT SUM(dark_ml_delta FROM barrel_ledger_items)""")
         result = connection.execute(sql_statement)
         row = result.first()
         num_red_ml = row[0]
-        num_green_ml = row[1]
-        num_blue_ml = row[2]
-        num_dark_ml = row[3]
+        
+        result2= connection.execute(sql_statement2)
+        row2 = result2.first()
+        num_green_ml = row2[0]
+        
+        result3 = connection.execute(sql_statement3)
+        row3 = result3.first()
+        num_blue_ml = row3[0]
+        
+        result4 = connection.execute(sql_statement4)
+        row4 = result4.first()
+        num_dark_ml = row4[0]
 
         final_bottle_plan = []
 

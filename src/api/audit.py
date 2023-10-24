@@ -21,26 +21,20 @@ def get_inventory():
     total_gold_count = 0
 
     with db.engine.begin() as connection:
-        sql_statement = text("SELECT total_potions FROM global_inventory")
-        result = connection.execute(sql_statement)
-        rows = result.fetchall()
-        #print(rows)
-        for row in rows:
-            total_potion_count += row[0]  # Access the actual value
+            sql_statement = text("SELECT SUM(potion_delta) AS potion FROM potion_ledger_items")
+            result = connection.execute(sql_statement)
+            row = result.first()
+            total_potion_count = row[0]
 
-        sql_statement = text("SELECT num_red_ml, num_green_ml, num_blue_ml FROM global_inventory")
-        result = connection.execute(sql_statement)
-        row = result.first()
-        num_red_ml = row[0]
-        num_green_ml = row[1]
-        num_blue_ml = row[2]
-        total_ml_count = num_red_ml + num_green_ml + num_blue_ml
+            sql_statement2 = text("SELECT SUM(red_ml_delta) + SUM(green_ml_delta) + SUM(blue_ml_delta) AS mills FROM barrel_ledger_items")
+            result2 = connection.execute(sql_statement2)
+            row2 = result2.first()
+            total_ml_count = row2[0]
 
-        sql_statement3 = text("SELECT gold FROM global_inventory")
-        result3 = connection.execute(sql_statement3)
-        rows3 = result3.first()
-        gold = rows3[0]  # Unpack the value directly
-        total_gold_count = gold
+            sql_statement3 = text("SELECT SUM(gold_delta) AS gold FROM gold_ledger_items")
+            result3 = connection.execute(sql_statement3)
+            row3 = result3.first()
+            total_gold_count = row3[0]
 
     return {"number_of_potions": total_potion_count, "ml_in_barrels": total_ml_count, "gold": total_gold_count}
 

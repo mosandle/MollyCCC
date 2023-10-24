@@ -15,8 +15,15 @@ def get_catalog():
     #should be listing all available potions of red, green, and blue
     
     with db.engine.begin() as connection:
-        #need sku, name, quantity, price, type
-        sql_statement = text("SELECT sku, name, quantity, price, type FROM potions_inventory WHERE quantity > 0")
+        #need sku, name, quantity, price, type          
+        sql_statement = text("""
+                                SELECT sku, name, quantity, price, type, SUM(potion_ledger_items.potion_delta) AS quantity
+                                FROM potions_inventory
+                                JOIN potion_ledger_items ON potions_inventory.id = potion_ledger_items.potion_id
+                                GROUP BY potions_inventory.id
+                                HAVING SUM(potion_ledger_items.potion_delta) > 0
+                                LIMIT 6""")
+                             
         result = connection.execute(sql_statement)
         rows = result.fetchall()
         final_catalog = []
