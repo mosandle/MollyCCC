@@ -21,35 +21,34 @@ class PotionInventory(BaseModel):
 
 @router.post("/deliver")
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
-    """ """
     with db.engine.begin() as connection:
         for potion in potions_delivered:
-            # Get the SKU of the delivered potion based on its type
-            sql_statement_sku = text("SELECT sku FROM potions_inventory WHERE type = :type")
-            result_sku = connection.execute(sql_statement_sku, {"type": potion.potion_type})
-            row_sku = result_sku.first()
-            if row_sku:
-                sku = row_sku[0]
+            # Get the potion_id of the delivered potion based on its type
+            sql_statement_potion_id = text("SELECT id FROM potions_inventory WHERE type = :type")
+            result_potion_id = connection.execute(sql_statement_potion_id, {"type": potion.potion_type})
+            row_potion_id = result_potion_id.first()
+            if row_potion_id:
+                potion_id = row_potion_id[0]
             else:
                 return "Potion type not found in inventory, something went wrong"
 
-            # Update the quantity for the retrieved SKU
+            # Update the quantity for the retrieved potion_id
             sql_statement_quantity = text("""
-            INSERT INTO potion_ledger_items (potions_delta) VALUES (:quantity) WHERE sku = :sku""")
-            result_quantity = connection.execute(sql_statement_quantity, {"sku": sku, "quantity": potion.quantity})
+            INSERT INTO potion_ledger_items (potion_id, potion_delta)
+            VALUES (:potion_id, :quantity)
+            """)
+            result_quantity = connection.execute(sql_statement_quantity, {"potion_id": potion_id, "quantity": potion.quantity})
 
             if not result_quantity.rowcount:
                 return "Failed to update potion quantity, something went wrong"
 
             red_mL, green_mL, blue_mL, dark_mL = potion.potion_type  # Assuming [red, green, blue, dark]
 
+            # Update the ml values in barrel_ledger_items using potion_id
             sql_statement_mL = text(
                 """
-                INSERT INTO barrel_ledger_items (red_ml_delta) VALUES (:quantity * :red_mL * -1)
-                INSERT INTO barrel_ledger_items (green_ml_delta) VALUES (:quantity * :green_mL * -1)
-                INSERT INTO barrel_ledger_items (blue_ml_delta) VALUES (:quantity * :blue_mL * -1)
-                INSERT INTO barrel_ledger_items (dark_ml_delta) VALUES (:quantity * :dark_mL * -1)
-                "WHERE :quantity > 0
+                INSERT INTO barrel_ledger_items (red_ml_delta, green_ml_delta, blue_ml_delta, dark_ml_delta)
+                VALUES (:quantity * :red_mL * -1, :quantity * :green_mL * -1, :quantity * :blue_mL * -1, :quantity * :dark_mL * -1)
                 """
             )
             result_mL = connection.execute(
@@ -67,6 +66,10 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
 
     return "OK"
 
+
+
+    
+
 # Gets called 4 times a day
 @router.post("/plan")
 def get_bottle_plan():
@@ -74,10 +77,10 @@ def get_bottle_plan():
     Go from barrel to bottle.
             """
     with db.engine.begin() as connection:
-        sql_statement = text("""SELECT SUM(red_ml_delta FROM barrel_ledger_items)""")
-        sql_statement2 = text("""SELECT SUM(green_ml_delta FROM barrel_ledger_items) """)        
-        sql_statement3 = text("""SELECT SUM(blue_ml_delta FROM barrel_ledger_items)""")        
-        sql_statement4 = text("""SELECT SUM(dark_ml_delta FROM barrel_ledger_items)""")
+        sql_statement = text("""SELECT SUM(red_ml_delta) FROM barrel_ledger_items""")
+        sql_statement2 = text("""SELECT SUM(green_ml_delta) FROM barrel_ledger_items """)        
+        sql_statement3 = text("""SELECT SUM(blue_ml_delta) FROM barrel_ledger_items""")        
+        sql_statement4 = text("""SELECT SUM(dark_ml_delta) FROM barrel_ledger_items""")
         result = connection.execute(sql_statement)
         row = result.first()
         num_red_ml = row[0]
