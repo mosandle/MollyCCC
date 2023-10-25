@@ -72,6 +72,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
             modified_list = [100 if x == 1 else x for x in barrel.potion_type]
             barrel.potion_type = modified_list
 
+
             # Get the ID of the potion in potion_ledger_items based on the potion_type
             sql_get_potion_id = text("SELECT id FROM potions_inventory WHERE type = :type")
             result_get_potion_id = connection.execute(sql_get_potion_id, {"type": modified_list})
@@ -82,9 +83,10 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 sql_statement2 = text("SELECT SUM(potion_delta) FROM potion_ledger_items WHERE potion_id = :potion_id")
                 result2 = connection.execute(sql_statement2, {"potion_id": potion_id})
                 quantity = result2.scalar()
-            
+                print(gold_count)
+
             # Determine if you need to purchase this barrel
-            if quantity is not None and quantity < 60 and gold_count >= (barrel.price * barrel.quantity):
+            if quantity < 60 and gold_count >= (barrel.price * barrel.quantity):
                 final_purchase_plan.append({
                     "sku": barrel.sku,
                     "quantity": barrel.quantity,
@@ -93,5 +95,6 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     "price": barrel.price,
                 })
                 gold_count = gold_count - (barrel.price * barrel.quantity)
+    print(final_purchase_plan)
 
     return final_purchase_plan
