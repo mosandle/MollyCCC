@@ -45,8 +45,9 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
             # Handle other operations, if necessary
             # For example, inserting values into gold_ledger_items
             sql_statement_gold = text("INSERT INTO gold_ledger_items (gold_delta) VALUES (:price * :quantity * -1)")
-            print(barrel.quantity)
-            print(barrel.price)
+            #print(barrel.quantity)
+            
+            #print(barrel.price)
             result_gold = connection.execute(sql_statement_gold, {"price": barrel.price, "quantity": barrel.quantity})
 
         return "OK"
@@ -83,7 +84,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 sql_statement2 = text("SELECT SUM(potion_delta) FROM potion_ledger_items WHERE potion_id = :potion_id")
                 result2 = connection.execute(sql_statement2, {"potion_id": potion_id})
                 quantity = result2.scalar()
-                print(gold_count)
+                #print(gold_count)
 
             # Determine if you need to purchase this barrel
             if quantity < 60 and gold_count >= (barrel.price * barrel.quantity):
