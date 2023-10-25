@@ -28,10 +28,10 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
             sql_statement = text("""
                 INSERT INTO barrel_ledger_items (red_ml_delta, green_ml_delta, blue_ml_delta, dark_ml_delta)
                 VALUES (
-                    CASE WHEN :potion_type = ARRAY[100, 0, 0, 0] THEN :ml_per_barrel * :quantity ELSE 0 END,
-                    CASE WHEN :potion_type = ARRAY[0, 100, 0, 0] THEN :ml_per_barrel * :quantity ELSE 0 END,
-                    CASE WHEN :potion_type = ARRAY[0, 0, 100, 0] THEN :ml_per_barrel * :quantity ELSE 0 END,
-                    CASE WHEN :potion_type = ARRAY[0, 0, 0, 100] THEN :ml_per_barrel * :quantity ELSE 0 END
+                    CASE WHEN :potion_type = ARRAY[1, 0, 0, 0] THEN :ml_per_barrel * :quantity ELSE 0 END,
+                    CASE WHEN :potion_type = ARRAY[0, 1, 0, 0] THEN :ml_per_barrel * :quantity ELSE 0 END,
+                    CASE WHEN :potion_type = ARRAY[0, 0, 1, 0] THEN :ml_per_barrel * :quantity ELSE 0 END,
+                    CASE WHEN :potion_type = ARRAY[0, 0, 0, 1] THEN :ml_per_barrel * :quantity ELSE 0 END
                 )
             """)
 
