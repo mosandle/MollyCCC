@@ -26,7 +26,7 @@ def get_inventory():
             row = result.first()
             total_potion_count = row[0]
 
-            sql_statement2 = text("SELECT SUM(red_ml_delta) + SUM(green_ml_delta) + SUM(blue_ml_delta) AS mills FROM barrel_ledger_items")
+            sql_statement2 = text("SELECT SUM(red_ml_delta) + SUM(green_ml_delta) + SUM(blue_ml_delta) + SUM(dark_ml_delta) AS mills FROM barrel_ledger_items")
             result2 = connection.execute(sql_statement2)
             row2 = result2.first()
             total_ml_count = row2[0]
