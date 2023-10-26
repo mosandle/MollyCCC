@@ -88,7 +88,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
             # Determine if you need to purchase this barrel
             needed_num = gold_count - (barrel.price * barrel.quantity)
-            if quantity < 10 and needed_num > 60:
+            if quantity < 10 and needed_num > 20:
                 final_purchase_plan.append({
                     "sku": barrel.sku,
                     "quantity": barrel.quantity,
