@@ -28,7 +28,7 @@ def search_orders(
     customer_name: str = "",
     potion_sku: str = "",
     search_page: str = "",
-    sort_col: search_sort_options = search_sort_options.timestamp,
+    sort_col: search_sort_options = search_sort_options.timestamp, 
     sort_order: search_sort_order = search_sort_order.desc,
 ):
     """
@@ -53,21 +53,36 @@ def search_orders(
     line item contains the line item id (must be unique), item sku, 
     customer name, line item total (in gold), and timestamp of the order.
     Your results must be paginated, the max results you can return at any
-    time is 5 total line items.
-    """
+    time is 5 total line items. """
+
+    stmt = (
+            sqlalchemy.select(
+                db.cart_items.c.id,
+                db.potions_inventory.c.sku,
+                db.carts.c.customer_name,
+                db.carts.c.created_at,
+            )
+            .limit(5)
+        )
+
+    with db.engine.connect() as conn:
+        result = conn.execute(stmt)
+        json = []
+        for row in result:
+            json.append(
+            {
+                "line_item_id": row.id,
+                "item_sku": row.sku,
+                "customer_name": row.customer_name,
+                "line_item_total": 50,
+                "timestamp": row.created_at,
+            }
+            )
 
     return {
         "previous": "",
         "next": "",
-        "results": [
-            {
-                "line_item_id": 1,
-                "item_sku": "1 oblivion potion",
-                "customer_name": "Scaramouche",
-                "line_item_total": 50,
-                "timestamp": "2021-01-01T00:00:00Z",
-            }
-        ],
+        "results": json
     }
 
 class NewCart(BaseModel):
@@ -100,7 +115,7 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
 
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
-                    INSERT INTO cart_items (cart_id, quantity, id) 
+                    INSERT INTO cart_items (cart_id, quantity, potion_id) 
                     SELECT :cart_id, :quantity, id
                     FROM potions_inventory WHERE potions_inventory.sku = :item_sku """),
                     [{"cart_id": cart_id, "quantity": cart_item.quantity, "item_sku": item_sku}])
@@ -119,7 +134,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     with db.engine.begin() as connection:
         stuff = connection.execute(sqlalchemy.text(
             """
-            SELECT id, quantity 
+            SELECT potion_id, quantity 
             FROM cart_items
             WHERE cart_items.cart_id = :cart_id
             """), 
@@ -131,7 +146,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             INSERT INTO potion_ledger_items (potion_delta, potion_id) 
             VALUES (:potion_delta, :potion_id)
             """), 
-            [{"potion_delta": -row.quantity, "potion_id": row.id}])
+            [{"potion_delta": -row.quantity, "potion_id": row.potion_id}])
         
         result = connection.execute(sqlalchemy.text(
             """
