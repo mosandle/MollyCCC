@@ -31,6 +31,84 @@ def search_orders(
     sort_col: search_sort_options = search_sort_options.timestamp, 
     sort_order: search_sort_order = search_sort_order.desc,
 ):
+    
+    # Define the number of results per page
+    results_per_page = 5
+
+    # Calculate the offset for pagination
+    if search_page and search_page.isdigit():
+        page = int(search_page)
+        offset = (page - 1) * results_per_page
+    else:
+        page = 1
+        offset = 0
+
+    if sort_col == search_sort_options.timestamp:
+        order_by = db.carts.c.created_at
+
+    if sort_order == "desc":
+        reverse_sort = True
+    else:
+        reverse_sort = False
+
+    stmt = (
+        sqlalchemy.select(
+            db.cart_items.c.id,
+            db.potions_inventory.c.sku,
+            db.carts.c.customer_name,
+            db.potions_inventory.c.price,
+            db.carts.c.created_at,
+        )
+        .select_from(
+            db.cart_items
+            .join(
+                db.carts,
+                db.cart_items.c.cart_id == db.carts.c.cart_id
+            )
+            .join(
+                db.potions_inventory,
+                db.cart_items.c.potion_id == db.potions_inventory.c.id
+            )
+        )
+        .offset(offset)  # Apply offset for pagination
+        .limit(results_per_page)  # Limit results per page
+    )
+
+    if customer_name != "":
+        stmt = stmt.where(db.carts.c.customer_name.ilike(f"%{customer_name}%"))
+    if potion_sku != "":
+        stmt = stmt.where(db.potions_inventory.c.sku.ilike(f"%{potion_sku}%"))
+
+    # Apply the sorting
+    if reverse_sort:
+        stmt = stmt.order_by(order_by.desc())
+    else:
+        stmt = stmt.order_by(order_by.asc())
+
+    with db.engine.connect() as conn:
+        result = conn.execute(stmt)
+        json = []
+        for row in result:
+            json.append(
+            {
+                "line_item_id": row.id,
+                "item_sku": row.sku,
+                "customer_name": row.customer_name,
+                "line_item_total": row.price, 
+                "timestamp": row.created_at,
+            }
+            )
+
+    # Calculate "previous" and "next" page tokens
+    previous_page = page - 1 if page > 1 else None
+    next_page = page + 1
+
+    return {
+        "previous": previous_page,
+        "next": next_page,
+        "results": json
+    }
+
     """
     Search for cart line items by customer name and/or potion sku.
 
@@ -53,7 +131,7 @@ def search_orders(
     line item contains the line item id (must be unique), item sku, 
     customer name, line item total (in gold), and timestamp of the order.
     Your results must be paginated, the max results you can return at any
-    time is 5 total line items. """
+    time is 5 total line items. 
 
     if sort_col == search_sort_options.timestamp:
         order_by = db.carts.c.created_at
@@ -118,6 +196,7 @@ def search_orders(
 
 class NewCart(BaseModel):
     customer: str
+"""
 
 @router.post("/") #works
 def create_cart(new_cart: NewCart):
