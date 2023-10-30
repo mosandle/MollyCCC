@@ -11,8 +11,7 @@ def get_catalog():
     """
     Each unique item combination must have only a single price.
     """
-    # Can return a max of 6 items. (currently returning 3)
-    #should be listing all available potions of red, green, and blue
+    # Can return a max of 6 items.
     
     with db.engine.begin() as connection:
         #need sku, name, quantity, price, type          
