@@ -192,13 +192,12 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             [{"cart_id": cart_id}])
     
         row = result.first()
-        gold_paid = row.gold_paid
-        potions_bought = row.potions_bought
+        if row.gold_paid != None:
+            gold_paid = row.gold_paid
+        if row.potions_bought != None:
+            potions_bought = row.potions_bought
 
-        if gold_paid is not None:
-            connection.execute(sqlalchemy.text("""
+        connection.execute(sqlalchemy.text("""
                 INSERT INTO gold_ledger_items (gold_delta) VALUES (:gold_paid)
                 """), {"gold_paid": gold_paid})
-        else:
-            return {"total_potions_bought": 0, "gold_paid": 0}
     return {"total_potions_bought": potions_bought, "gold_paid": gold_paid}
