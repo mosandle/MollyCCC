@@ -200,6 +200,5 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                 INSERT INTO gold_ledger_items (gold_delta) VALUES (:gold_paid)
                 """), {"gold_paid": gold_paid})
         else:
-            raise ValueError("Gold amount cannot be None, cart checkout error occurred")
-
+            return {"total_potions_bought": 0, "gold_paid": 0}
     return {"total_potions_bought": potions_bought, "gold_paid": gold_paid}
