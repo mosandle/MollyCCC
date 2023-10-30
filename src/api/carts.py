@@ -55,15 +55,45 @@ def search_orders(
     Your results must be paginated, the max results you can return at any
     time is 5 total line items. """
 
+    if sort_col == search_sort_options.timestamp:
+        order_by = db.carts.c.created_at
+
+    if sort_order == "desc":
+        reverse_sort = True
+    else:
+        reverse_sort = False
+
     stmt = (
-            sqlalchemy.select(
-                db.cart_items.c.id,
-                db.potions_inventory.c.sku,
-                db.carts.c.customer_name,
-                db.carts.c.created_at,
-            )
-            .limit(5)
+        sqlalchemy.select(
+            db.cart_items.c.id,
+            db.potions_inventory.c.sku,
+            db.carts.c.customer_name,
+            db.carts.c.created_at,
         )
+        .select_from(
+            db.cart_items
+            .join(
+                db.carts,
+                db.cart_items.c.cart_id == db.carts.c.cart_id
+            )
+            .join(
+                db.potions_inventory,
+                db.cart_items.c.potion_id == db.potions_inventory.c.id
+            )
+        )
+        .limit(5)
+    )
+
+    if customer_name != "":
+        stmt = stmt.where(db.carts.c.customer_name.ilike(f"%{customer_name}%"))
+    if potion_sku != "":
+        stmt = stmt.where(db.potions_inventory.c.sku.ilike(f"%{potion_sku}%"))
+
+    # Apply the sorting
+        if reverse_sort:
+            stmt = stmt.order_by(order_by.desc())
+        else:
+            stmt = stmt.order_by(order_by.asc())
 
     with db.engine.connect() as conn:
         result = conn.execute(stmt)
@@ -74,7 +104,7 @@ def search_orders(
                 "line_item_id": row.id,
                 "item_sku": row.sku,
                 "customer_name": row.customer_name,
-                "line_item_total": 50,
+                "line_item_total": 50, 
                 "timestamp": row.created_at,
             }
             )
@@ -164,9 +194,11 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         gold_paid = row.gold_paid
         potions_bought = row.potions_bought
 
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO gold_ledger_items (gold_delta) VALUES (:gold_paid)
-            """ ),
-            [{"gold_paid": gold_paid}])
+        if gold_paid is not None:
+            connection.execute(sqlalchemy.text("""
+                INSERT INTO gold_ledger_items (gold_delta) VALUES (:gold_paid)
+                """), {"gold_paid": gold_paid})
+        else:
+            raise ValueError("Gold amount cannot be None, cart checkout error occurred")
 
     return {"total_potions_bought": potions_bought, "gold_paid": gold_paid}
