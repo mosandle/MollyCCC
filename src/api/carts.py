@@ -101,7 +101,9 @@ def search_orders(
 
     # Calculate "previous" and "next" page tokens
     previous_page = page - 1 if page > 1 else None
-    next_page = page + 1
+
+    # Check if there are more results on the next page
+    next_page = page + 1 if len(json) > 0 else None
 
     return {
         "previous": previous_page,
