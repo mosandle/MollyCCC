@@ -68,6 +68,7 @@ def search_orders(
             db.cart_items.c.id,
             db.potions_inventory.c.sku,
             db.carts.c.customer_name,
+            db.potions_inventory.c.price,
             db.carts.c.created_at,
         )
         .select_from(
@@ -104,7 +105,7 @@ def search_orders(
                 "line_item_id": row.id,
                 "item_sku": row.sku,
                 "customer_name": row.customer_name,
-                "line_item_total": 50, 
+                "line_item_total": row.price, 
                 "timestamp": row.created_at,
             }
             )
