@@ -57,6 +57,7 @@ def search_orders(
             db.potions_inventory.c.sku,
             db.carts.c.customer_name,
             db.potions_inventory.c.price,
+            db.cart_items.c.quantity,
             db.carts.c.created_at,
         )
         .select_from(
@@ -92,9 +93,9 @@ def search_orders(
             json.append(
             {
                 "line_item_id": row.id,
-                "item_sku": row.sku,
+                "item_sku": f"{row.quantity} {row.sku}",
                 "customer_name": row.customer_name,
-                "line_item_total": row.price, 
+                "line_item_total": row.price * row.quantity, 
                 "timestamp": row.created_at,
             }
             )
@@ -134,70 +135,6 @@ def search_orders(
     customer name, line item total (in gold), and timestamp of the order.
     Your results must be paginated, the max results you can return at any
     time is 5 total line items. 
-
-    if sort_col == search_sort_options.timestamp:
-        order_by = db.carts.c.created_at
-
-    if sort_order == "desc":
-        reverse_sort = True
-    else:
-        reverse_sort = False
-
-    stmt = (
-        sqlalchemy.select(
-            db.cart_items.c.id,
-            db.potions_inventory.c.sku,
-            db.carts.c.customer_name,
-            db.potions_inventory.c.price,
-            db.carts.c.created_at,
-        )
-        .select_from(
-            db.cart_items
-            .join(
-                db.carts,
-                db.cart_items.c.cart_id == db.carts.c.cart_id
-            )
-            .join(
-                db.potions_inventory,
-                db.cart_items.c.potion_id == db.potions_inventory.c.id
-            )
-        )
-        .limit(5)
-    )
-
-    if customer_name != "":
-        stmt = stmt.where(db.carts.c.customer_name.ilike(f"%{customer_name}%"))
-    if potion_sku != "":
-        stmt = stmt.where(db.potions_inventory.c.sku.ilike(f"%{potion_sku}%"))
-
-    # Apply the sorting
-        if reverse_sort:
-            stmt = stmt.order_by(order_by.desc())
-        else:
-            stmt = stmt.order_by(order_by.asc())
-
-    with db.engine.connect() as conn:
-        result = conn.execute(stmt)
-        json = []
-        for row in result:
-            json.append(
-            {
-                "line_item_id": row.id,
-                "item_sku": row.sku,
-                "customer_name": row.customer_name,
-                "line_item_total": row.price, 
-                "timestamp": row.created_at,
-            }
-            )
-
-    return {
-        "previous": "",
-        "next": "",
-        "results": json
-    }
-
-class NewCart(BaseModel):
-    customer: str
 """
 
 @router.post("/") #works
@@ -243,42 +180,63 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     gold_paid = 0
     potions_bought = 0
 
-    with db.engine.begin() as connection:
-        stuff = connection.execute(sqlalchemy.text(
-            """
-            SELECT potion_id, quantity 
-            FROM cart_items
-            WHERE cart_items.cart_id = :cart_id
-            """), 
-            [{"cart_id": cart_id}])
-        
-        for row in stuff:
+    try:
+        with db.engine.begin() as connection:
+            stuff = connection.execute(sqlalchemy.text(
+                """
+                SELECT potion_id, quantity 
+                FROM cart_items
+                WHERE cart_items.cart_id = :cart_id
+                """), 
+                [{"cart_id": cart_id}])
+
+            # Start a transaction
+            connection.begin()
+
+            try:
+                for row in stuff:
+                    connection.execute(sqlalchemy.text(
+                        """
+                        INSERT INTO potion_ledger_items (potion_delta, potion_id) 
+                        VALUES (:potion_delta, :potion_id)
+                        """), 
+                        [{"potion_delta": -row.quantity, "potion_id": row.potion_id}])
+
+                result = connection.execute(sqlalchemy.text(
+                    """
+                    SELECT SUM(potions_inventory.price * cart_items.quantity) AS gold_paid,
+                    SUM(cart_items.quantity) AS potions_bought 
+                    FROM cart_items
+
+                    JOIN potions_inventory ON cart_items.id = potions_inventory.id 
+                    WHERE cart_items.cart_id = :cart_id;
+                    """),
+                    [{"cart_id": cart_id}])
+
+                row = result.first()
+                gold_paid = row.gold_paid
+                potions_bought = row.potions_bought
+
+                connection.execute(sqlalchemy.text("""
+                        INSERT INTO gold_ledger_items (gold_delta) VALUES (:gold_paid)
+                        """), {"gold_paid": gold_paid})
+
+                # Commit the transaction if everything is successful
+                connection.commit()
+            except Exception as e:
+                # If an error occurs, roll back the transaction to revert changes
+                connection.rollback()
+                raise e
+    except Exception as e:
+        # Handle the error and raise an Exception with a 500 Internal Server Error
+        # Delete rows from the cart_items table
+        with db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(
-            """
-            INSERT INTO potion_ledger_items (potion_delta, potion_id) 
-            VALUES (:potion_delta, :potion_id)
-            """), 
-            [{"potion_delta": -row.quantity, "potion_id": row.potion_id}])
-        
-        result = connection.execute(sqlalchemy.text(
-            """
-            SELECT SUM(potions_inventory.price * cart_items.quantity) AS gold_paid,
-            SUM(cart_items.quantity) AS potions_bought 
-            FROM cart_items
+                        """
+                        DELETE FROM cart_items
+                        WHERE cart_id = :cart_id
+                        """),
+                        {"cart_id": cart_id})
+        return {"rollback error"}
 
-            JOIN potions_inventory ON cart_items.id = potions_inventory.id 
-            WHERE cart_items.cart_id = :cart_id;
-
-            """),
-            [{"cart_id": cart_id}])
-    
-        row = result.first()
-        if row.gold_paid != None:
-            gold_paid = row.gold_paid
-        if row.potions_bought != None:
-            potions_bought = row.potions_bought
-
-        connection.execute(sqlalchemy.text("""
-                INSERT INTO gold_ledger_items (gold_delta) VALUES (:gold_paid)
-                """), {"gold_paid": gold_paid})
     return {"total_potions_bought": potions_bought, "gold_paid": gold_paid}
