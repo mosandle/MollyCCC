@@ -21,14 +21,14 @@ class search_sort_options(str, Enum):
 
 class search_sort_order(str, Enum):
     asc = "asc"
-    desc = "desc"   
+    desc = "desc"
 
 @router.get("/search/", tags=["search"])
 def search_orders(
     customer_name: str = "",
     potion_sku: str = "",
     search_page: str = "",
-    sort_col: search_sort_options = search_sort_options.timestamp, 
+    sort_col: search_sort_options = search_sort_options.timestamp,
     sort_order: search_sort_order = search_sort_order.desc,
 ):
     
@@ -180,63 +180,55 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     gold_paid = 0
     potions_bought = 0
 
-    try:
-        with db.engine.begin() as connection:
+    with db.engine.begin() as connection:
             stuff = connection.execute(sqlalchemy.text(
                 """
-                SELECT potion_id, quantity 
+                SELECT quantity, potion_id
                 FROM cart_items
                 WHERE cart_items.cart_id = :cart_id
                 """), 
                 [{"cart_id": cart_id}])
-
-            # Start a transaction
-            connection.begin()
-
-            try:
-                for row in stuff:
-                    connection.execute(sqlalchemy.text(
+                        
+            for row in stuff:
+                connection.execute(sqlalchemy.text(
                         """
                         INSERT INTO potion_ledger_items (potion_delta, potion_id) 
                         VALUES (:potion_delta, :potion_id)
                         """), 
-                        [{"potion_delta": -row.quantity, "potion_id": row.potion_id}])
-
-                result = connection.execute(sqlalchemy.text(
+                        [{"potion_id": row.potion_id, "potion_delta": -row.quantity,}])
+                
+            result = connection.execute(sqlalchemy.text(
                     """
                     SELECT SUM(potions_inventory.price * cart_items.quantity) AS gold_paid,
-                    SUM(cart_items.quantity) AS potions_bought 
-                    FROM cart_items
-
-                    JOIN potions_inventory ON cart_items.id = potions_inventory.id 
+                    SUM(cart_items.quantity) AS potions_bought
+                    
+                    FROM potions_inventory JOIN cart_items
+                    ON potions_inventory.id = cart_items.potion_id
                     WHERE cart_items.cart_id = :cart_id;
                     """),
                     [{"cart_id": cart_id}])
+            
 
-                row = result.first()
-                gold_paid = row.gold_paid
-                potions_bought = row.potions_bought
+            row = result.first()
+            gold_paid = row.gold_paid
+            potions_bought = row.potions_bought
 
-                connection.execute(sqlalchemy.text("""
-                        INSERT INTO gold_ledger_items (gold_delta) VALUES (:gold_paid)
-                        """), {"gold_paid": gold_paid})
+            connection.execute(sqlalchemy.text("""
+                            INSERT INTO gold_ledger_items (gold_delta) VALUES (:gold_paid)
+                            """), {"gold_paid": gold_paid})
 
-                # Commit the transaction if everything is successful
-                connection.commit()
-            except Exception as e:
-                # If an error occurs, roll back the transaction to revert changes
-                connection.rollback()
+            """
+                except Exception as e:
+                    # If an error occurs, roll back the transaction to revert changes
                 raise e
-    except Exception as e:
-        # Handle the error and raise an Exception with a 500 Internal Server Error
-        # Delete rows from the cart_items table
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(
-                        """
-                        DELETE FROM cart_items
-                        WHERE cart_id = :cart_id
-                        """),
-                        {"cart_id": cart_id})
-        return {"rollback error"}
-
+                connection.rollback()
+                
+            except Exception as e:
+            with db.engine.begin() as connection:
+                connection.execute(sqlalchemy.text(
+                            DELETE FROM cart_items
+                            WHERE cart_id = :cart_id),
+                            {"cart_id": cart_id})
+            return {"rollback error"}
+            """
     return {"total_potions_bought": potions_bought, "gold_paid": gold_paid}
