@@ -43,6 +43,8 @@ def search_orders(
         page = 1
         offset = 0
 
+    order_by = None
+
     if sort_col == search_sort_options.timestamp:
         order_by = db.carts.c.created_at
 
@@ -81,10 +83,11 @@ def search_orders(
         stmt = stmt.where(db.potions_inventory.c.sku.ilike(f"%{potion_sku}%"))
 
     # Apply the sorting
-    if reverse_sort:
-        stmt = stmt.order_by(order_by.desc())
-    else:
-        stmt = stmt.order_by(order_by.asc())
+    if order_by is not None: 
+        if reverse_sort:
+            stmt = stmt.order_by(order_by.desc())
+        else:
+            stmt = stmt.order_by(order_by.asc())
 
     with db.engine.connect() as conn:
         result = conn.execute(stmt)
