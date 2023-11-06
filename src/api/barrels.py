@@ -23,6 +23,7 @@ class Barrel(BaseModel):
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
     print(barrels_delivered)
     with db.engine.begin() as connection:
+        return []
         for barrel in barrels_delivered:
             # Define the SQL statement with dynamic columns
             sql_statement = text("""
