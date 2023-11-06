@@ -77,6 +77,11 @@ def get_bottle_plan():
     Go from barrel to bottle.
             """
     with db.engine.begin() as connection:
+        sql_statement_potions = text("SELECT SUM(potion_delta) AS potion FROM potion_ledger_items")
+        result = connection.execute(sql_statement_potions)
+        row = result.first()
+        total_potion_count = row[0]        
+        
         sql_statement = text("""SELECT SUM(red_ml_delta) FROM barrel_ledger_items""")
         sql_statement2 = text("""SELECT SUM(green_ml_delta) FROM barrel_ledger_items """)        
         sql_statement3 = text("""SELECT SUM(blue_ml_delta) FROM barrel_ledger_items""")        
@@ -116,6 +121,7 @@ def get_bottle_plan():
                             "potion_type": [red_mL, green_mL, blue_mL, dark_mL],
                             "quantity": 1,
                         }
+                        total_potion_count =+ 1
 
                         final_bottle_plan.append(potion_entry)
                         # Subtract the used mL from inventory
@@ -127,6 +133,8 @@ def get_bottle_plan():
                         found_valid_potion = True
 
             if not found_valid_potion:
+                break
+            if total_potion_count > 299:
                 break
 
         return final_bottle_plan
