@@ -132,9 +132,11 @@ def get_bottle_plan():
 
                         found_valid_potion = True
 
+                        if total_potion_count > 299:
+                            break
+
             if not found_valid_potion:
                 break
-            if total_potion_count > 299:
-                break
+
 
         return final_bottle_plan
