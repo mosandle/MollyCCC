@@ -124,7 +124,7 @@ def get_bottle_plan():
 
                         final_bottle_plan.append(potion_entry)
                         total_potion_count = total_potion_count + 1
-                        print(total_potion_count)
+                        #print(total_potion_count)
 
                         # Subtract the used mL from inventory
                         num_red_ml -= red_mL
@@ -134,7 +134,7 @@ def get_bottle_plan():
 
                         found_valid_potion = True
                         if total_potion_count > 298:
-                             break
+                            found_valid_potion = False
 
             if not found_valid_potion:
                 break
