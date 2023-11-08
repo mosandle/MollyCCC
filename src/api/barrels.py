@@ -59,7 +59,6 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
-    return []
     with db.engine.begin() as connection:
         sql_statement = text("SELECT SUM(gold_delta) AS gold FROM gold_ledger_items")
         result = connection.execute(sql_statement)
@@ -88,7 +87,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
             # Determine if you need to purchase this barrel
             needed_num = gold_count - (barrel.price * barrel.quantity)
-            if quantity < 10 and needed_num >= 30:
+            if quantity < 100 and needed_num >= 8000:
                 final_purchase_plan.append({
                     "sku": barrel.sku,
                     "quantity": barrel.quantity,
