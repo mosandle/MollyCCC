@@ -132,9 +132,10 @@ def get_bottle_plan():
                         num_blue_ml -= blue_mL
                         num_dark_ml -= dark_mL
 
-                        found_valid_potion = True
                         if total_potion_count > 298:
                             found_valid_potion = False
+                    
+                        found_valid_potion = True
 
             if not found_valid_potion:
                 break
